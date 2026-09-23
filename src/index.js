@@ -1,22 +1,21 @@
-import CloudTablesApi from 'cloudtables-api';
 import Combobox from './Components/Combobox/Combobox.js';
 import agenciesList from './data/agencies.js';
 import params from './data/params.js';
 
 // CSS
-import normalize from './css/normalize.css';
-import postmedia from './css/postmedia.css';
-import colours from './css/colors.css';
-import fonts from './css/fonts.css';
-import css from './css/main.css';
-import cloudtable from'./css/cloudtable.css';
+import './css/normalize.css';
+import './css/postmedia.css';
+import './css/colors.css';
+import './css/fonts.css';
+import './css/main.css';
+import './css/cloudtable.css';
 
 // FONTS
-import'./fonts/Shift-Bold.otf';
-import'./fonts/Shift-BoldItalic.otf';
-import'./fonts/BentonSansCond-Regular.otf';
-import'./fonts/BentonSansCond-RegItalic.otf';
-import'./fonts/BentonSansCond-Bold.otf';
+import './fonts/Shift-Bold.otf';
+import './fonts/Shift-BoldItalic.otf';
+import './fonts/BentonSansCond-Regular.otf';
+import './fonts/BentonSansCond-RegItalic.otf';
+import './fonts/BentonSansCond-Bold.otf';
 
 
 // VARS
@@ -101,20 +100,10 @@ async function loadCloudTable(agency) {
     // if the filter has been selected, filter for those options, otherwise show everything (null)
     let conditions = agency ? conditionsArray : null;
 
-    // grab the ct api instance
-    let api = new CloudTablesApi(params.apiKey, {
-        clientName: params.clientId,     // Client's name - optional
-        domain: server,                 // CloudTables host
-        // domain: params.cloudTableDomain,       // Your CloudTables host
-        // secure: false,              // Disallow (true), or allow (false) self-signed certificates   
-        // ssl: false,               // Disable https
-        conditions: conditions      // Use this to filter table
-    });
-
-
-    console.log(`https://${server}/io/loader/${params.cloudTableId}/table/d`)
-    // get a cloudtables api token
-    let token = await api.token();
+    // console.log(`https://${server}/io/loader/${params.cloudTableId}/table/d`)
+    // CloudTables' npm client uses Node's https module, so request the token
+    // with the browser's native fetch API instead.
+    let token = await getCloudTableToken(conditions);
     // build the script tag for the table
     let script = document.createElement('script');
     script.src = `https://${server}/io/loader/${params.cloudTableId}/table/d`;
@@ -123,7 +112,40 @@ async function loadCloudTable(agency) {
     script.setAttribute('data-clientId', params.clientId);
 
     // insert the script tag to load the table
-    let app = document.getElementById(params.appId).appendChild(script);
+    document.getElementById(params.appId).appendChild(script);
+}
+
+async function getCloudTableToken(conditions) {
+    const form = new URLSearchParams({
+        key: params.apiKey,
+        clientName: params.clientId
+    });
+
+    if (conditions) {
+        conditions.forEach((condition, index) => {
+            form.append(`conditions[${index}][id]`, condition.id);
+            form.append(`conditions[${index}][value]`, condition.value);
+        });
+    }
+
+    const response = await fetch(`https://${server}/io/api/1/access`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: form
+    });
+
+    if (!response.ok) {
+        throw new Error(`CloudTables token request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.errors || !data.token) {
+        throw new Error('CloudTables token response did not contain a token');
+    }
+
+    return data.token;
 }
 
 // KICK *SHT OFF!!!

@@ -1,4 +1,4 @@
-import autocomplete from './jquery-ui-autocomplete.css';
+import './jquery-ui-autocomplete.css';
 
 function setupAgencyCombobox(combobox) {
     // combobox setup

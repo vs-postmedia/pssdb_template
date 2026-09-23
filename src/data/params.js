@@ -2,7 +2,7 @@ const params = {
     appId: 'app',
     agencyId: 'dp-57', // find in the data page of your cloudtables dataset
     clientId: 'pssdb-v12', // unique for each dataset
-    cloudTableId: '2e623496-3cb7-11f0-a98a-738f477aee66', // find in embed tab
+    cloudTableId: 'a928b8fa-3ffd-11f0-a19b-cb99422b5336', // find in data tab
     // below here probably won’t change 
     tableId: 'cloudtable', // DOM element for the table
     cloudTableDomain: 'vs-postmedia-a.cloudtables.me',
